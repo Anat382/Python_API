@@ -36,9 +36,10 @@ def connect_url(job):
         url = f'{base_url}search/vacancy?text={job}&page={count_n}'
         numer = requests.get(url, headers=headers)
         print(count_n, numer.status_code)
-        if numer.status_code == 404:
+        if numer.status_code == 404 or not BeautifulSoup(numer.text, 'html.parser'):
+            print(f'По запросу «{job}» ничего не найдено, код {numer.status_code}')
             break
-        # elif count_n == 3:
+        # elif count_n == 2:
         #     break
         count_n += 1
     print(count_n)
@@ -52,7 +53,7 @@ def connect_url(job):
             response = requests.get(url, headers=headers)
             dom = BeautifulSoup(response.text, 'html.parser')
             # pprint(dom)
-            articles = dom.find_all('div', {'class': 'vacancy-serp-item'})
+            articles = dom.find_all('div', {'class': 'vacancy-serp-item vacancy-serp-item_redesigned'})
             # print(articles)
             for n, art in enumerate(articles):
                 data_json = {}
@@ -72,9 +73,9 @@ def connect_url(job):
                 place_work = local.getText() if local else None
 
                 salary_num = re.findall(r'\d+', get_salary)
-                world_simb = re.compile(r'[а-я]\w+|[А-Я]\w+')
+                world_simb = re.compile(r'[а-я]\w+|[А-Я]\w+|[A-Z]\w+|[a-z]\w+')
                 world = re.findall(world_simb, get_salary)
-                currency = world[-1] if world else None
+                currency = world[-1] if world and len(salary_num) >= 1 else None
                 befor = 'от' if 'от' in world else None
                 after = 'до' if 'до' in world else None
                 data_json['page'] = num
@@ -91,7 +92,7 @@ def connect_url(job):
 
                 data_job.append(data_json)
 
-                # print(url_job_, job_name, str(get_salary).encode('utf-8').decode('utf-8'), company_name, company_url, date_send, place_work)
+                print(num, url_job_, job_name, str(get_salary).encode('utf-8').decode('utf-8'), company_name, company_url, date_send, place_work)
                 # print(job_url['href'], job_url.getText(), salary.previousSibling.getText(), company_url.getText(), company_url['href']) # company_url['href']
             df = df.append(pd.json_normalize(data_job))
         except Exception as exp:
@@ -99,15 +100,15 @@ def connect_url(job):
     return df
 
 
-# Программист
-job = str(input('Введите профессию, должность, компанию: ').encode('UTF-8')).replace(r'\x','%').upper()[2:-1]
+# Data Engineer
+job = str(input('Введите профессию, должность, компанию: ').encode('UTF-8')).replace(r'\x','%').upper()[2:-1].replace(' ', '+')
+
 start = perf_counter()
 df = connect_url(job)
 print(perf_counter() - start)
 
-a = 1
-html_res = pretty_html_table.build_table(df, 'blue_light')
 
+html_res = pretty_html_table.build_table(df, 'blue_light')
 
 path = 'hh.json'
 with open(path, 'w', encoding='utf-8') as f:
@@ -118,3 +119,5 @@ path = 'temp.html'
 with open(path, 'w', encoding='utf-8') as f:
     f.write(str(html_res))
 webbrowser.open(path)
+
+a = 1
