@@ -32,7 +32,7 @@ def check_id(find_elem, id,  find_elem2: str, id2: str, data={}):
     else:
         print('Элемент уже существует')
 
-def request_to_yandex(url):
+def request_mail(url):
     try:
         response = requests.get(url, headers=header)
         root = html.fromstring(response.text)
@@ -81,4 +81,4 @@ header = {
 
 url = r'https://news.mail.ru/'
 
-request_to_yandex(url)
+request_mail(url)
