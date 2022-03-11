@@ -31,7 +31,7 @@ def check_id(find_elem, id, find_elem2: str, id2: str, data={}):
 
     if not f_one:
         collection.insert_one(data)
-        pritn('ок')
+        print('ок')
     else:
         print('Элемент уже существует')
 
